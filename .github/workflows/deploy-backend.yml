@@ -19,8 +19,11 @@ jobs:
           php-version: 8.3
           tools: composer
 
+      - name: Install PHP extensions check
+        run: php -m
+
       - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader
+        run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
