@@ -1,4 +1,4 @@
-name: Debug Symfony Deploy
+name: Deploy Symfony API to o2switch
 
 on:
   push:
@@ -10,28 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: '8.3'
           tools: composer
 
-      - name: Show PHP version
-        run: php -v
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Show Composer version
-        run: composer -V
+      - name: Clear Composer cache
+        run: composer clear-cache
 
-      - name: Install dependencies (DEBUG)
-        run: composer install -vvv
-
-      - name: List files
+      - name: Show project structure (debug)
         run: ls -la
 
-      - name: FTP Deploy (only if previous success)
+      - name: Deploy via FTP (FTPS)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -42,3 +39,12 @@ jobs:
           local-dir: ./
           server-dir: /public_html/greenloop-backend/
           dangerous-clean-slate: false
+          exclude: |
+            .git*
+            .github/
+            node_modules/
+            tests/
+            var/
+            vendor/
+            .env.local
+            .env.test
