@@ -6,34 +6,43 @@ use App\Repository\AddressRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: AddressRepository::class)]
 class Address
 {
+    #[Groups(['user:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $street = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 20)]
     private ?string $number = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 20)]
     private ?string $postalCode = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 100)]
     private ?string $city = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 100)]
     private ?string $country = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $phone = null;
 
-    #[ORM\Column(type: 'boolean', options: ["default" => false])]
+    #[Groups(['user:read'])]
+    #[ORM\Column(type: 'boolean')]
     private bool $isDefault = false;
 
     #[ORM\ManyToOne(inversedBy: 'addresses')]

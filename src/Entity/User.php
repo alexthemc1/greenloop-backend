@@ -10,54 +10,96 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[UniqueEntity(fields: ['email'], message: 'Email déjà utilisé')]
+#[ApiResource(
+    normalizationContext: ['groups' => ['user:read']],
+    denormalizationContext: ['groups' => ['user:write']],
+    operations: [
+        new GetCollection(paginationItemsPerPage: 8),
+        new Get(),
+        new Post(
+            processor: \App\State\UserPasswordHasherProcessor::class,
+            validationContext: ['groups' => ['Default', 'user:create']]
+        ),
+        new Patch(),
+        new Put()
+    ]
+)]
+#[ApiFilter(OrderFilter::class, properties: ['createdAt' => 'DESC'])]
+
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-
-    #[UniqueEntity(fields: ['email'], message: 'Email déjà utilisé')]
-
-
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[Assert\NotBlank]
-    #[Assert\Email]
+    #[Assert\NotBlank(message: 'L’email est obligatoire')]
+    #[Assert\Email(message: 'Adresse email invalide')]
+    #[Groups(['user:read', 'user:write'])]
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(
+        message: 'Le mot de passe est obligatoire',
+        groups: ['user:create']
+    )]
+    #[Assert\Length(
+        min: 8,
+        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères'
+    )]
+    #[Groups(['user:write'])]
+    private ?string $plainPassword = null;
+
+    #[Assert\NotBlank(message: 'Le prénom est obligatoire')]
+    #[Groups(['user:read', 'user:write', 'comment:read'])]
     #[ORM\Column(length: 100)]
     private ?string $firstname = null;
 
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Le nom est obligatoire')]
+    #[Groups(['user:read', 'user:write', 'comment:read'])]
     #[ORM\Column(length: 100)]
     private ?string $lastname = null;
 
+    #[Groups(['user:read', 'comment:read'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $profileImage = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(type: 'json')]
-    private array $roles = [];
+    private array $roles = ["ROLE_USER"];
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $googleId = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+
+
     /**
      * @var Collection<int, Address>
      */
+    #[Groups(['user:read'])]
     #[ORM\OneToMany(targetEntity: Address::class, mappedBy: 'user')]
     private Collection $addresses;
 
@@ -81,6 +123,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Wishlist::class, mappedBy: 'user')]
     private Collection $wishlists;
+
 
     public function __construct()
     {
@@ -126,6 +169,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     // GETTERS / SETTERS
+
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(?string $plainPassword): static
+    {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
 
     public function getId(): ?int
     {

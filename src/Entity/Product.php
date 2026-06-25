@@ -8,85 +8,119 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\ApiProperty;
+
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
+#[ApiResource(
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Patch(),
+        new Delete(),
+    ],
+    normalizationContext: ['groups' => ['product:read']],
+    denormalizationContext: ['groups' => ['product:write']]
+)]
+
+#[ApiFilter(OrderFilter::class, properties: ['createdAt', 'price', 'name'])]
+
+#[ApiFilter(BooleanFilter::class, properties: ['isPopular', 'isFeatured'])]
+
+#[ApiFilter(RangeFilter::class, properties: ['price', 'stock', 'discountPercent'])]
+
+#[ApiFilter(SearchFilter::class, properties: ['category' => 'exact', 'name' => 'partial', 'keywords' => 'partial'])]
+
 class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+
+    #[Groups(['product:read', 'cart:read', 'comment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write', 'cart:read', 'comment:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 100, unique: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write', 'comment:read'])]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $descriptionShort = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $descriptionLong = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write', 'cart:read'])]
     private ?string $price = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write', 'cart:read'])]
     private ?int $discountPercent = null;
 
     #[ORM\Column]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?int $stock = null;
 
     #[ORM\Column(type: 'boolean', options: ["default" => false])]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private bool $isPopular = false;
 
     #[ORM\Column(type: 'boolean', options: ["default" => false])]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private bool $isFeatured = false;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?float $weight = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private array $keywords = [];
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $origin = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $taste = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $usageAdvice = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'product:write'])]
     private ?string $conservation = null;
 
     /**
      * @var Category
      */
-    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'products')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['product:read'])]
+    #[ORM\ManyToOne(targetEntity: Category::class,  inversedBy: 'products')]
+    #[Groups(['product:read', 'product:write'])]
     private ?Category $category = null;
 
     /**
@@ -94,7 +128,7 @@ class Product
      */
 
     #[ORM\OneToMany(targetEntity: ProductImage::class, mappedBy: 'product', orphanRemoval: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read', 'cart:read', 'comment:read'])]
     private Collection $images;
 
 
@@ -107,12 +141,14 @@ class Product
     /**
      * @var Collection<int, ProductNutritionalIcon>
      */
-    #[ORM\OneToMany(targetEntity: ProductNutritionalIcon::class, mappedBy: 'product')]
-    #[Groups(['product:read'])]
+    #[ORM\OneToMany(targetEntity: ProductNutritionalIcon::class, mappedBy: 'product', cascade: ['persist'], orphanRemoval: true)]
+    #[Groups(['product:read', 'product:write'])]
     private Collection $productNutritionalIcons;
 
     public function __construct()
     {
+        $this->createdAt = new \DateTimeImmutable();
+
         $this->images = new ArrayCollection();
         $this->comments = new ArrayCollection();
         $this->productNutritionalIcons = new ArrayCollection();
@@ -186,7 +222,7 @@ class Product
     public function getPriceAsFloat(): float
     {
         return (float) $this->price;
-    } // récupérer le prix en float
+    }
 
     public function getDiscountPercent(): ?int
     {
@@ -305,7 +341,6 @@ class Product
     public function removeImage(ProductImage $image): static
     {
         if ($this->images->removeElement($image)) {
-            // set the owning side to null (unless already changed)
             if ($image->getProduct() === $this) {
                 $image->setProduct(null);
             }
@@ -425,12 +460,14 @@ class Product
         return $this->createdAt > new \DateTimeImmutable('-7 days');
     }
 
+    #[Groups(['product:read'])]
+    #[ApiProperty]
     public function getAverageRating(): float
     {
         $ratings = [];
 
         foreach ($this->comments as $comment) {
-            if ($comment->getRating() !== null && $comment->getStatus() === 'approved') {
+            if ($comment->getRating() !== null && $comment->getStatus() === 'approuvé') {
                 $ratings[] = $comment->getRating();
             }
         }
@@ -446,7 +483,7 @@ class Product
     {
         return count(array_filter(
             $this->comments->toArray(),
-            fn($c) => $c->getStatus() === 'approved'
+            fn($c) => $c->getStatus() === 'approuvé'
         ));
     }
 

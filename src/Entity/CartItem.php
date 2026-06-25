@@ -4,15 +4,19 @@ namespace App\Entity;
 
 use App\Repository\CartItemRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
+
 
 #[ORM\Entity(repositoryClass: CartItemRepository::class)]
 class CartItem
 {
+    #[Groups(['cart:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['cart:read'])]
     #[ORM\Column]
     private ?int $quantity = null;
 
@@ -20,11 +24,11 @@ class CartItem
     #[ORM\JoinColumn(nullable: false)]
     private ?Cart $cart = null;
 
+    #[Groups(['cart:read'])]
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
-
+    #[Groups(['cart:read'])]
     public function getId(): ?int
     {
         return $this->id;
@@ -65,6 +69,4 @@ class CartItem
 
         return $this;
     }
-
-
 }

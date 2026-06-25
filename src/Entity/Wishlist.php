@@ -4,21 +4,25 @@ namespace App\Entity;
 
 use App\Repository\WishlistRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
+
 
 #[ORM\Entity(repositoryClass: WishlistRepository::class)]
 #[ORM\Table(
     uniqueConstraints: [
         new ORM\UniqueConstraint(name: "uniq_user_product", columns: ["user_id", "product_id"])
     ]
-)] // cela permet d'éviter que l'utilisateur ajoute plusieur fois le même produit à sa whishlist
+)]
 class Wishlist
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['wishlist:read'])]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups(['wishlist:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'wishlists')]
@@ -27,6 +31,7 @@ class Wishlist
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['wishlist:read'])]
     private ?Product $product = null;
 
 

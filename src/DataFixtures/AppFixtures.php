@@ -20,8 +20,8 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Faker\Factory;
-use App\Data\Catalog;
-use App\Data\Reviews;
+use App\DataFixtures\Catalog;
+use App\DataFixtures\Reviews;
 
 class AppFixtures extends Fixture
 {
@@ -36,9 +36,9 @@ class AppFixtures extends Fixture
 
         $faker = Factory::create('fr_BE');
 
-        // =====================
+        
         // ADMIN
-        // =====================
+        
         $adminUser = new User();
         $adminUser->setFirstname('Admin');
         $adminUser->setLastname('Admin');
@@ -51,9 +51,9 @@ class AppFixtures extends Fixture
 
         $manager->persist($adminUser);
 
-        // =====================
+        
         // UTILISATEURS
-        // =====================
+        
         $users = [$adminUser];
 
         for ($i = 0; $i < 10; $i++) {
@@ -72,9 +72,9 @@ class AppFixtures extends Fixture
             $users[] = $user;
         }
 
-        // =====================
+        
         // CATEGORIES
-        // =====================
+        
         $categories = [];
 
         foreach (['Fruits', 'Légumes', 'Paniers'] as $name) {
@@ -86,9 +86,9 @@ class AppFixtures extends Fixture
             $categories[] = $category;
         }
 
-        // =====================
+        
         // ICONES NUTRITIONELLES
-        // =====================
+        
         $nutritionalIcons = [];
         $iconData = [
             ['Vitamine C', '#ff6b6b', 'Riche en vitamine C'],
@@ -114,9 +114,9 @@ class AppFixtures extends Fixture
             $nutritionalIcons[] = $icon;
         }
 
-        // =====================
+        
         // PRODUITS
-        // =====================
+        
         $products = [];
 
         foreach ($catalog as $data) {
@@ -186,9 +186,9 @@ class AppFixtures extends Fixture
             }
         }
 
-        // =====================
+        
         // ADDRESSES
-        // =====================
+        
         $addresses = [];
 
         foreach ($users as $user) {
@@ -206,9 +206,9 @@ class AppFixtures extends Fixture
             $addresses[] = $address;
         }
 
-        // =====================
+        
         // COMMANDES
-        // =====================
+        
         foreach ($users as $index => $user) {
 
             if (!isset($addresses[$index])) continue;
@@ -242,9 +242,9 @@ class AppFixtures extends Fixture
             $manager->persist($order);
         }
 
-        // =====================
+        
         // COMMENTAIRES
-        // =====================
+        
         foreach ($products as $product) {
             foreach ($faker->randomElements($users, rand(0, 4)) as $user) {
 
@@ -259,9 +259,9 @@ class AppFixtures extends Fixture
             }
         }
 
-        // =====================
+        
         // PANIERS
-        // =====================
+        
         foreach ($users as $user) {
 
             $cart = new Cart();
@@ -281,9 +281,9 @@ class AppFixtures extends Fixture
             }
         }
 
-        // =====================
+        
         // LISTE DE SOUHAITS
-        // =====================
+        
         foreach ($users as $user) {
 
             foreach ($faker->randomElements($products, rand(0, 5)) as $product) {

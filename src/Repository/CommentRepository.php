@@ -16,28 +16,53 @@ class CommentRepository extends ServiceEntityRepository
         parent::__construct($registry, Comment::class);
     }
 
-    //    /**
-    //     * @return Comment[] Returns an array of Comment objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findByFilters(?string $status, int $limit, int $offset)
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->addSelect('u')
+            ->leftJoin('c.product', 'p')
+            ->addSelect('p')
+            ->orderBy('c.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
 
-    //    public function findOneBySomeField($value): ?Comment
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($status && $status !== 'all') {
+            $qb->andWhere('c.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function countByFilters(?string $status)
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)');
+
+        if ($status && $status !== 'all') {
+            $qb->andWhere('c.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findByProduct(int $productId, int $limit = 20, int $offset = 0)
+{
+    return $this->createQueryBuilder('c')
+        ->leftJoin('c.user', 'u')
+        ->addSelect('u')
+        ->leftJoin('c.product', 'p')
+        ->addSelect('p')
+        ->where('c.product = :productId')
+        ->andWhere('c.status = :status')
+        ->setParameter('productId', $productId)
+        ->setParameter('status', 'approuvé')
+        ->orderBy('c.createdAt', 'DESC')
+        ->setMaxResults($limit)
+        ->setFirstResult($offset)
+        ->getQuery()
+        ->getResult();
+}
 }

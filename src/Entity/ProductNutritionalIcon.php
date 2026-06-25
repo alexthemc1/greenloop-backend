@@ -5,7 +5,23 @@ namespace App\Entity;
 use App\Repository\ProductNutritionalIconRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Delete;
 
+#[ApiResource(
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(),
+        new Delete()
+    ],
+    denormalizationContext: [
+        'groups' => ['productNutritionalIcon:write']
+    ]
+)]
 
 #[ORM\Entity(repositoryClass: ProductNutritionalIconRepository::class)]
 #[ORM\Table(
@@ -20,13 +36,15 @@ class ProductNutritionalIcon
     #[ORM\Column]
     private ?int $id = null;
 
+
+    #[Groups(['productNutritionalIcon:write', 'product:write'])]
     #[ORM\ManyToOne(inversedBy: 'productNutritionalIcons')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
+    #[Groups(['product:read', 'productNutritionalIcon:write', 'product:write'])]
     #[ORM\ManyToOne(inversedBy: 'productNutritionalIcons')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['product:read'])]
     private ?NutritionalIcon $nutritionalIcon = null;
 
     public function getId(): ?int
