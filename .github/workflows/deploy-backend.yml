@@ -10,24 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: 8.3
           tools: composer
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Install dependencies (PROD)
+        run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: Prepare clean deploy folder
+      - name: Clean cache
+        run: php bin/console cache:clear --env=prod || true
+
+      - name: Prepare deploy folder
         run: |
           mkdir deploy
-          rsync -av --exclude="var" --exclude="vendor" --exclude=".git" --exclude="tests" ./ deploy/
+          rsync -av --exclude='deploy' --exclude='.git' ./ deploy/
 
-      - name: Deploy via FTP (ONLY CLEAN FOLDER)
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -37,4 +40,4 @@ jobs:
           protocol: ftps
           local-dir: ./deploy/
           server-dir: /public_html/greenloop-backend/
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
