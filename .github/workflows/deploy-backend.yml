@@ -1,4 +1,4 @@
-name: Deploy Symfony API to o2switch (PROD CLEAN)
+name: Deploy Vite to o2switch
 
 on:
   push:
@@ -6,31 +6,26 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          php-version: 8.3
-          tools: composer
+          node-version: 20
+          cache: npm
 
-      # 1. Install dependencies (PROD SAFE)
       - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader
+        run: npm ci
 
-      # 2. Clear + warm cache (safe prod)
-      - name: Symfony cache warmup
-        run: |
-          php bin/console cache:clear --env=prod --no-debug
-          php bin/console cache:warmup --env=prod
+      - name: Build project
+        run: npm run build
 
-      # 3. Deploy via FTP CLEAN
-      - name: Deploy via FTP (CLEAN)
+      - name: Deploy via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -38,15 +33,15 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-          local-dir: ./
-          server-dir: /public_html/greenloop-backend/
+
+          # IMPORTANT: Vite build folder
+          local-dir: ./dist/
+
+          # IMPORTANT: folder dédié
+          server-dir: /public_html/greenloop/
+
           dangerous-clean-slate: false
 
           exclude: |
             **/.git*
             **/.github*
-            **/node_modules/**
-            **/tests/**
-            **/var/**
-            **/.env*
-            **/README.md
