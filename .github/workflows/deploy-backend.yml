@@ -10,50 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -----------------------
-      # 1. Checkout code
-      # -----------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -----------------------
-      # 2. Setup PHP
-      # -----------------------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.3
           tools: composer
-          ini-values: memory_limit=-1
 
-      # -----------------------
-      # 3. Install dependencies (FAST & SAFE)
-      # -----------------------
-      - name: Install dependencies
+      # IMPORTANT: install prod-safe
+      - name: Install dependencies (no dev + no scripts)
+        run: composer install --no-dev --optimize-autoloader --no-scripts
+
+      # Rebuild cache manually (safe)
+      - name: Warmup Symfony cache
         run: |
-          composer install \
-            --no-dev \
-            --optimize-autoloader \
-            --no-interaction \
-            --no-progress \
-            --prefer-dist \
-            --no-scripts
+          php bin/console cache:clear --env=prod --no-debug
+          php bin/console cache:warmup --env=prod
 
-      # -----------------------
-      # 4. Clear Symfony cache safely
-      # -----------------------
-      - name: Clear cache
-        run: php bin/console cache:clear --env=prod --no-warmup --no-debug || true
-
-      # -----------------------
-      # 5. Warmup cache (optional but safe)
-      # -----------------------
-      - name: Warmup cache
-        run: php bin/console cache:warmup --env=prod || true
-
-      # -----------------------
-      # 6. Deploy via FTP (o2switch)
-      # -----------------------
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -64,4 +39,4 @@ jobs:
           protocol: ftps
           local-dir: ./
           server-dir: /public_html/greenloop-backend/
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false

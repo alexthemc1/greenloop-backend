@@ -1,14 +1,43 @@
-
-###> symfony/framework-bundle ###
+###> Symfony ###
 /.env.local
 /.env.local.php
 /.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
+
 /var/
 /vendor/
-###< symfony/framework-bundle ###
 
-###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
-###< lexik/jwt-authentication-bundle ###
+###> Composer ###
+composer.phar
+/composer.lock
+
+###> Logs ###
+/*.log
+/var/log/
+
+###> Cache ###
+/var/cache/
+/var/sessions/
+
+###> PHPUnit ###
+/phpunit.xml
+/phpunit.result.cache
+
+###> IDE ###
+.idea/
+.vscode/
+*.swp
+*.swo
+
+###> OS ###
+.DS_Store
+Thumbs.db
+
+###> Git ###
+.git/
+.gitignore
+
+###> Node (si jamais présent dans backend) ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
