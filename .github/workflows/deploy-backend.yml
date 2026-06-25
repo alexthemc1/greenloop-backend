@@ -18,17 +18,16 @@ jobs:
         with:
           php-version: 8.3
           tools: composer
+          ini-values: memory_limit=-1
 
-      - name: Install dependencies (PROD)
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+      - name: Install dependencies (PROD SAFE)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-      - name: Clean cache
-        run: php bin/console cache:clear --env=prod || true
+      - name: Clear cache (SAFE MODE)
+        run: php bin/console cache:clear --env=prod --no-warmup || true
 
-      - name: Prepare deploy folder
-        run: |
-          mkdir deploy
-          rsync -av --exclude='deploy' --exclude='.git' ./ deploy/
+      - name: Warmup cache (SAFE)
+        run: php bin/console cache:warmup --env=prod || true
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -38,6 +37,6 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-          local-dir: ./deploy/
+          local-dir: ./
           server-dir: /public_html/greenloop-backend/
           dangerous-clean-slate: true
