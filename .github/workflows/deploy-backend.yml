@@ -22,13 +22,12 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Clear Composer cache
-        run: composer clear-cache
+      - name: Prepare clean deploy folder
+        run: |
+          mkdir deploy
+          rsync -av --exclude="var" --exclude="vendor" --exclude=".git" --exclude="tests" ./ deploy/
 
-      - name: Show project structure (debug)
-        run: ls -la
-
-      - name: Deploy via FTP (FTPS)
+      - name: Deploy via FTP (ONLY CLEAN FOLDER)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -36,15 +35,6 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-          local-dir: ./
+          local-dir: ./deploy/
           server-dir: /public_html/greenloop-backend/
           dangerous-clean-slate: false
-          exclude: |
-            .git*
-            .github/
-            node_modules/
-            tests/
-            var/
-            vendor/
-            .env.local
-            .env.test
