@@ -1,4 +1,4 @@
-name: Deploy Symfony API to o2switch
+name: Debug Symfony Deploy
 
 on:
   push:
@@ -19,13 +19,19 @@ jobs:
           php-version: 8.3
           tools: composer
 
-      - name: Install PHP extensions check
-        run: php -m
+      - name: Show PHP version
+        run: php -v
 
-      - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+      - name: Show Composer version
+        run: composer -V
 
-      - name: Deploy via FTP
+      - name: Install dependencies (DEBUG)
+        run: composer install -vvv
+
+      - name: List files
+        run: ls -la
+
+      - name: FTP Deploy (only if previous success)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
