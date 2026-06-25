@@ -10,9 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------
+      # 1. Checkout code
+      # -----------------------
       - name: Checkout
         uses: actions/checkout@v4
 
+      # -----------------------
+      # 2. Setup PHP
+      # -----------------------
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -20,15 +26,34 @@ jobs:
           tools: composer
           ini-values: memory_limit=-1
 
-      - name: Install dependencies (PROD SAFE)
-        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+      # -----------------------
+      # 3. Install dependencies (FAST & SAFE)
+      # -----------------------
+      - name: Install dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --no-interaction \
+            --no-progress \
+            --prefer-dist \
+            --no-scripts
 
-      - name: Clear cache (SAFE MODE)
-        run: php bin/console cache:clear --env=prod --no-warmup || true
+      # -----------------------
+      # 4. Clear Symfony cache safely
+      # -----------------------
+      - name: Clear cache
+        run: php bin/console cache:clear --env=prod --no-warmup --no-debug || true
 
-      - name: Warmup cache (SAFE)
+      # -----------------------
+      # 5. Warmup cache (optional but safe)
+      # -----------------------
+      - name: Warmup cache
         run: php bin/console cache:warmup --env=prod || true
 
+      # -----------------------
+      # 6. Deploy via FTP (o2switch)
+      # -----------------------
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
