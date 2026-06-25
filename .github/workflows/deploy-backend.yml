@@ -1,4 +1,4 @@
-name: Deploy Symfony API to o2switch
+name: Deploy Symfony API to o2switch (PROD CLEAN)
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup PHP
@@ -19,17 +19,18 @@ jobs:
           php-version: 8.3
           tools: composer
 
-      # IMPORTANT: install prod-safe
-      - name: Install dependencies (no dev + no scripts)
-        run: composer install --no-dev --optimize-autoloader --no-scripts
+      # 1. Install dependencies (PROD SAFE)
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
 
-      # Rebuild cache manually (safe)
-      - name: Warmup Symfony cache
+      # 2. Clear + warm cache (safe prod)
+      - name: Symfony cache warmup
         run: |
           php bin/console cache:clear --env=prod --no-debug
           php bin/console cache:warmup --env=prod
 
-      - name: Deploy via FTP
+      # 3. Deploy via FTP CLEAN
+      - name: Deploy via FTP (CLEAN)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -40,3 +41,12 @@ jobs:
           local-dir: ./
           server-dir: /public_html/greenloop-backend/
           dangerous-clean-slate: false
+
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/tests/**
+            **/var/**
+            **/.env*
+            **/README.md
