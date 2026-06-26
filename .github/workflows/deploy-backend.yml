@@ -1,4 +1,45 @@
-name: Deploy Symfony API to o2switch
+# name: Deploy Symfony API to o2switch
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Setup PHP
+#         uses: shivammathur/setup-php@v2
+#         with:
+#           php-version: '8.3'
+#           tools: composer
+
+#       - name: Install dependencies
+#         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+#       - name: Prepare clean deploy folder
+#         run: |
+#           mkdir deploy
+#           rsync -av --exclude="var" --exclude="vendor" --exclude=".git" --exclude="tests" ./ deploy/
+
+#       - name: Deploy via FTP (ONLY CLEAN FOLDER)
+#         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+#         with:
+#           server: ${{ secrets.SFTP_SERVER }}
+#           username: ${{ secrets.SFTP_USERNAME }}
+#           password: ${{ secrets.SFTP_PASSWORD }}
+#           port: 21
+#           protocol: ftps
+#           local-dir: ./deploy/
+#           server-dir: /public_html/greenloop-backend/
+#           dangerous-clean-slate: false
+
+name: Deploy Symfony API
 
 on:
   push:
@@ -10,24 +51,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          tools: composer
+          php-version: "8.3"
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --no-dev --optimize-autoloader
 
-      - name: Prepare clean deploy folder
-        run: |
-          mkdir deploy
-          rsync -av --exclude="var" --exclude="vendor" --exclude=".git" --exclude="tests" ./ deploy/
-
-      - name: Deploy via FTP (ONLY CLEAN FOLDER)
+      - name: Deploy full project
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -35,6 +69,8 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-          local-dir: ./deploy/
+
+          local-dir: ./
           server-dir: /public_html/greenloop-backend/
-          dangerous-clean-slate: false
+
+          dangerous-clean-slate: true
