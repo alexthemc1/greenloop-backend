@@ -61,7 +61,17 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Deploy full project
+      - name: Create clean deploy folder
+        run: |
+          mkdir deploy
+          rsync -av \
+            --exclude="var" \
+            --exclude=".git" \
+            --exclude="tests" \
+            --exclude="node_modules" \
+            ./ deploy/
+
+      - name: Deploy ONLY clean folder
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -69,8 +79,6 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-
-          local-dir: ./
+          local-dir: ./deploy/
           server-dir: /public_html/greenloop-backend/
-
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
