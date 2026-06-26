@@ -57,21 +57,15 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
+          tools: composer
 
       - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader
+        run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: Create clean deploy folder
-        run: |
-          mkdir deploy
-          rsync -av \
-            --exclude="var" \
-            --exclude=".git" \
-            --exclude="tests" \
-            --exclude="node_modules" \
-            ./ deploy/
+      - name: Build cache (safe warmup)
+        run: php bin/console cache:warmup --env=prod || true
 
-      - name: Deploy ONLY clean folder
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
@@ -79,6 +73,6 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: 21
           protocol: ftps
-          local-dir: ./deploy/
+          local-dir: ./
           server-dir: /public_html/greenloop-backend/
           dangerous-clean-slate: false
